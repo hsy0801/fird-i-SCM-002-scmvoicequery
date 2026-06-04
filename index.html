@@ -839,7 +839,7 @@
     })();
 
     // --- AI Chat Logic ---
-    const GEMINI_API_KEY = "AQ.Ab8RN6LhjeK_ntxMUPA3PKbKqQBCzJNZQ43Raoqax86Ql0xaNg"; // 使用者提供
+    let GEMINI_API_KEY = localStorage.getItem('GEMINI_API_KEY') || ""; 
     const aiToggle = document.getElementById('aiChatToggle');
     const aiWindow = document.getElementById('aiChatWindow');
     const closeChat = document.getElementById('closeChat');
@@ -853,8 +853,14 @@
     closeChat.addEventListener('click', () => { aiWindow.style.display = 'none'; });
 
     async function callGemini(prompt) {
-      if (GEMINI_API_KEY === "YOUR_API_KEY_HERE") {
-        return "請先在程式碼中設定你的 Gemini API Key 才能開始對話。";
+      if (!GEMINI_API_KEY) {
+        const key = prompt("請輸入你的 Gemini API Key 以啟用 AI 功能：\n(此 Key 將儲存在你的瀏覽器中，不會上傳至伺服器)");
+        if (key) {
+          GEMINI_API_KEY = key;
+          localStorage.setItem('GEMINI_API_KEY', key);
+          return "API Key 已設定！請再試一次你的問題。";
+        }
+        return "尚未設定 API Key，無法使用 AI 分析功能。";
       }
       
       const context = rows.length > 0 ? 
@@ -872,8 +878,14 @@
           })
         });
         const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
         return data.candidates[0].content.parts[0].text;
       } catch (err) {
+        if (err.message.includes("API key not valid")) {
+          localStorage.removeItem('GEMINI_API_KEY');
+          GEMINI_API_KEY = "";
+          return "API Key 無效，已清除。請重新輸入。";
+        }
         return "呼叫 Gemini API 時發生錯誤：" + err.message;
       }
     }
