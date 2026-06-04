@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCM-002 庫存預警工具介紹</title>
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --surface: #152238;
+      --accent: #3d9cf5;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --ok: #66bb6a;
+    }
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+    .slide-container {
+      display: flex;
+      width: 400%; /* 4 slides */
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+    section {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    h1 { font-size: 3.5rem; color: var(--accent); margin-bottom: 1rem; }
+    h2 { font-size: 2.5rem; color: var(--accent); margin-top: 0; }
+    p { font-size: 1.2rem; color: var(--muted); max-width: 800px; line-height: 1.6; }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+      width: 100%;
+      max-width: 1000px;
+    }
+    .feature-card {
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .feature-card i { font-size: 3rem; display: block; margin-bottom: 1rem; }
+    .feature-card h3 { color: var(--text); margin-bottom: 0.5rem; }
+    .feature-card p { font-size: 0.9rem; }
+
+    .nav-btns {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1rem;
+      z-index: 100;
+    }
+    button {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    button:hover { background: var(--accent); border-color: var(--accent); }
+    .controls-hint {
+      position: fixed;
+      bottom: 1rem;
+      width: 100%;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide-container" id="slider">
+    <!-- Slide 1: Cover -->
+    <section>
+      <h1>SCM-002</h1>
+      <h2>智能庫存語音預警工具</h2>
+      <p>結合語音交互與 AI 分析的現代化庫存管理解決方案</p>
+      <div style="margin-top: 2rem; font-size: 0.9rem; color: var(--accent);">
+        打造高效、精準、透明的供應鏈管理
+      </div>
+    </section>
+
+    <!-- Slide 2: Enterprise Benefits -->
+    <section>
+      <h2>企業價值與優勢</h2>
+      <div class="features">
+        <div class="feature-card">
+          <i>🛡️</i>
+          <h3>降低缺貨風險</h3>
+          <p>自動計算安全庫存與預警，確保生產與銷售不中斷，提升客戶滿意度。</p>
+        </div>
+        <div class="feature-card">
+          <i>⚡</i>
+          <h3>提升營運效率</h3>
+          <p>透過語音與模糊查詢，管理者能以極速獲取庫存現況，節省大量人工對帳時間。</p>
+        </div>
+        <div class="feature-card">
+          <i>🤖</i>
+          <h3>數據驅動決策</h3>
+          <p>整合 Gemini 3.5 Flash AI，提供專業的補貨分析與風險評估建議。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 3: Operation -->
+    <section>
+      <h2>簡易操作 3 步驟</h2>
+      <div class="features">
+        <div class="feature-card">
+          <i>1. 載入</i>
+          <h3>一鍵導入</h3>
+          <p>支援 CSV 與 Excel 格式，直接拖放即可完成資料更新。</p>
+        </div>
+        <div class="feature-card">
+          <i>2. 詢問</i>
+          <h3>語音查詢</h3>
+          <p>對著系統說「哪些該補貨？」，即刻呈現視覺化報表與圖表。</p>
+        </div>
+        <div class="feature-card">
+          <i>3. 分析</i>
+          <h3>AI 洞察</h3>
+          <p>開啟 AI 助理，獲取針對特定品項或全局庫存的深度優化建議。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 4: Closing -->
+    <section>
+      <h2>準備好優化您的庫存管理了嗎？</h2>
+      <p>簡單、強大、智能 —— SCM-002 為您的企業賦能。</p>
+      <button onclick="window.location.href='../index.html'" style="margin-top: 2rem; background: var(--ok); border:none; padding: 1rem 2.5rem; font-size: 1.2rem;">立即開始使用</button>
+    </section>
+  </div>
+
+  <div class="nav-btns">
+    <button onclick="moveSlide(-1)">← 上一頁</button>
+    <button onclick="moveSlide(1)">下一頁 →</button>
+  </div>
+
+  <div class="controls-hint">使用左右方向鍵或按鈕切換投影片</div>
+
+  <script>
+    let currentSlide = 0;
+    const totalSlides = 4;
+    const slider = document.getElementById('slider');
+
+    function moveSlide(direction) {
+      currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+      slider.style.transform = `translateX(-${currentSlide * 100}vw)`;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') moveSlide(1);
+      if (e.key === 'ArrowLeft') moveSlide(-1);
+    });
+  </script>
+</body>
+</html>
