@@ -205,6 +205,78 @@
       letter-spacing: 0.04em;
     }
     .chart-box canvas { max-height: 280px; }
+
+    /* AI Chat Interface */
+    .ai-chat-toggle {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      z-index: 1000;
+      transition: transform 0.2s;
+    }
+    .ai-chat-toggle:hover { transform: scale(1.1); }
+    .ai-chat-window {
+      position: fixed;
+      bottom: 6rem;
+      right: 2rem;
+      width: 350px;
+      height: 500px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      z-index: 1000;
+      overflow: hidden;
+    }
+    .ai-chat-header {
+      padding: 1rem;
+      background: var(--surface2);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ai-chat-header h3 { margin: 0; font-size: 0.9rem; color: var(--accent); }
+    .ai-chat-messages {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+    }
+    .msg { padding: 0.6rem 0.8rem; border-radius: 12px; max-width: 85%; line-height: 1.4; }
+    .msg.user { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg.ai { background: var(--surface2); color: var(--text); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .ai-chat-input {
+      padding: 0.75rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      gap: 0.5rem;
+    }
+    .ai-chat-input input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 0.5rem;
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    .ai-chat-input button { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
   </style>
 </head>
 <body>
@@ -301,6 +373,24 @@
           </div>
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- AI Chat UI -->
+  <div class="ai-chat-toggle" id="aiChatToggle" title="AI 助理分析">
+    ✨
+  </div>
+  <div class="ai-chat-window" id="aiChatWindow">
+    <div class="ai-chat-header">
+      <h3>Gemini AI 庫存分析</h3>
+      <button type="button" id="closeChat" style="background:none; color:var(--muted); font-size:1.2rem; padding:0; min-width:auto;">&times;</button>
+    </div>
+    <div class="ai-chat-messages" id="aiChatMessages">
+      <div class="msg ai">你好！我是你的庫存 AI 助理。你可以問我關於目前的補貨建議、風險分析，或是要求我總結目前的庫存狀況。</div>
+    </div>
+    <div class="ai-chat-input">
+      <input type="text" id="aiInput" placeholder="詢問 AI..." autocomplete="off">
+      <button type="button" class="btn-primary" id="sendAiBtn">傳送</button>
     </div>
   </div>
 
@@ -747,6 +837,73 @@
         setDataStatus('請用「選擇檔案」載入 SCM-002.csv（直接雙擊 HTML 時無法自動讀檔）');
       }
     })();
+
+    // --- AI Chat Logic ---
+    const GEMINI_API_KEY = "YOUR_API_KEY_HERE"; // 使用者稍後提供
+    const aiToggle = document.getElementById('aiChatToggle');
+    const aiWindow = document.getElementById('aiChatWindow');
+    const closeChat = document.getElementById('closeChat');
+    const aiInput = document.getElementById('aiInput');
+    const sendAiBtn = document.getElementById('sendAiBtn');
+    const aiMessages = document.getElementById('aiChatMessages');
+
+    aiToggle.addEventListener('click', () => {
+      aiWindow.style.display = aiWindow.style.display === 'flex' ? 'none' : 'flex';
+    });
+    closeChat.addEventListener('click', () => { aiWindow.style.display = 'none'; });
+
+    async function callGemini(prompt) {
+      if (GEMINI_API_KEY === "YOUR_API_KEY_HERE") {
+        return "請先在程式碼中設定你的 Gemini API Key 才能開始對話。";
+      }
+      
+      const context = rows.length > 0 ? 
+        `目前的庫存摘要：總共有 ${rows.length} 筆品項。建議補貨量最大的品項前三名為：${rows.slice(0,3).map(r => r.item).join('、')}。` :
+        "目前尚未載入任何庫存資料。";
+
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: `你是一個專業的庫存管理助理。${context}\n使用者問題：${prompt}` }]
+            }]
+          })
+        });
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+      } catch (err) {
+        return "呼叫 Gemini API 時發生錯誤：" + err.message;
+      }
+    }
+
+    async function handleAiSend() {
+      const text = aiInput.value.trim();
+      if (!text) return;
+
+      appendMsg(text, 'user');
+      aiInput.value = '';
+
+      const loadingMsg = appendMsg('思考中...', 'ai');
+      const response = await callGemini(text);
+      loadingMsg.textContent = response;
+      aiMessages.scrollTop = aiMessages.scrollHeight;
+    }
+
+    function appendMsg(text, type) {
+      const div = document.createElement('div');
+      div.className = `msg ${type}`;
+      div.textContent = text;
+      aiMessages.appendChild(div);
+      aiMessages.scrollTop = aiMessages.scrollHeight;
+      return div;
+    }
+
+    sendAiBtn.addEventListener('click', handleAiSend);
+    aiInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAiSend();
+    });
   </script>
 </body>
 </html>
