@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "name": "firdi-i-scm-002-scmvoicequery",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/$1" }
+  ]
+}
