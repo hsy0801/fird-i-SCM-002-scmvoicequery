@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>新手操作測試 - SCM-002</title>
+  <title>快速上手手冊 - SCM-002</title>
   <style>
     :root {
       --bg: #0f1419;
@@ -19,101 +19,83 @@
       color: var(--text);
       display: flex;
       justify-content: center;
-      padding: 2rem;
+      padding: 1rem;
+      line-height: 1.6;
     }
     .container {
-      max-width: 600px;
+      max-width: 500px;
       width: 100%;
       background: var(--surface);
       padding: 2rem;
       border-radius: var(--radius);
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    h1 { color: var(--accent); margin-top: 0; }
-    .task {
+    h1 { color: var(--accent); font-size: 1.5rem; text-align: center; margin-bottom: 2rem; }
+    .step {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+    }
+    .step-num {
+      background: var(--accent);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      justify-content: center;
+      font-weight: bold;
+      flex-shrink: 0;
     }
-    .task:last-child { border-bottom: none; }
-    input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-    }
-    .done { text-decoration: line-through; color: #8b9cb3; }
+    .step-content b { color: var(--accent); display: block; margin-bottom: 0.2rem; }
+    .step-content p { margin: 0; font-size: 0.95rem; color: #b0c4de; }
     .btn-back {
-      display: inline-block;
+      display: block;
+      text-align: center;
       margin-top: 2rem;
       color: var(--accent);
       text-decoration: none;
       font-size: 0.9rem;
+      border: 1px solid var(--accent);
+      padding: 0.6rem;
+      border-radius: 8px;
     }
-    .progress-bar {
-      height: 10px;
-      background: #243044;
-      border-radius: 5px;
-      margin: 1rem 0;
-      overflow: hidden;
-    }
-    #progress {
-      height: 100%;
-      background: var(--ok);
-      width: 0%;
-      transition: width 0.3s;
-    }
+    .btn-back:hover { background: rgba(61,156,245,0.1); }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>新手操作測試 🎯</h1>
-    <p>完成以下任務以熟悉系統操作：</p>
+    <h1>快速上手 3 步驟 🚀</h1>
     
-    <div class="progress-bar"><div id="progress"></div></div>
-
-    <div id="taskList">
-      <div class="task">
-        <input type="checkbox" id="t1">
-        <label for="t1">1. 成功載入 SCM-002.csv 資料檔案</label>
-      </div>
-      <div class="task">
-        <input type="checkbox" id="t2">
-        <label for="t2">2. 使用「語音輸入」功能詢問一個品項</label>
-      </div>
-      <div class="task">
-        <input type="checkbox" id="t3">
-        <label for="t3">3. 調整「建議覆蓋天數」查看補貨量變化</label>
-      </div>
-      <div class="task">
-        <input type="checkbox" id="t4">
-        <label for="t4">4. 成功查出品項的「庫存警示」狀態</label>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <b>載入資料</b>
+        <p>點擊左側「選擇檔案」，上傳你的 SCM-002.csv 或 Excel 檔。</p>
       </div>
     </div>
 
-    <a href="../index.html" class="btn-back">← 返回系統</a>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <b>快速查詢</b>
+        <p>直接「輸入文字」或按「🎤 語音」說出品項名稱，系統會自動計算補貨量。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <b>AI 分析</b>
+        <p>點擊右下角 ✨ 按鈕，設定一次 API Key 後，即可請 AI 幫你總結庫存風險。</p>
+      </div>
+    </div>
+
+    <a href="../index.html" class="btn-back">我知道了，回系統</a>
   </div>
-
-  <script>
-    const checks = document.querySelectorAll('input[type="checkbox"]');
-    const progress = document.getElementById('progress');
-
-    checks.forEach(check => {
-      check.addEventListener('change', () => {
-        const label = check.nextElementSibling;
-        if (check.checked) label.classList.add('done');
-        else label.classList.remove('done');
-        
-        const doneCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
-        const total = checks.length;
-        progress.style.width = (doneCount / total * 100) + '%';
-        
-        if (doneCount === total) {
-          setTimeout(() => alert('恭喜！你已完成所有新手操作測試！'), 300);
-        }
-      });
-    });
-  </script>
 </body>
 </html>
