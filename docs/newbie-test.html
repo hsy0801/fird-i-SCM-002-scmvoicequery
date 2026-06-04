@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新手操作測試 - SCM-002</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --text: #e7ecf3;
+      --accent: #3d9cf5;
+      --ok: #66bb6a;
+      --radius: 12px;
+    }
+    body {
+      font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    h1 { color: var(--accent); margin-top: 0; }
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .task:last-child { border-bottom: none; }
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .done { text-decoration: line-through; color: #8b9cb3; }
+    .btn-back {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .progress-bar {
+      height: 10px;
+      background: #243044;
+      border-radius: 5px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+    #progress {
+      height: 100%;
+      background: var(--ok);
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>新手操作測試 🎯</h1>
+    <p>完成以下任務以熟悉系統操作：</p>
+    
+    <div class="progress-bar"><div id="progress"></div></div>
+
+    <div id="taskList">
+      <div class="task">
+        <input type="checkbox" id="t1">
+        <label for="t1">1. 成功載入 SCM-002.csv 資料檔案</label>
+      </div>
+      <div class="task">
+        <input type="checkbox" id="t2">
+        <label for="t2">2. 使用「語音輸入」功能詢問一個品項</label>
+      </div>
+      <div class="task">
+        <input type="checkbox" id="t3">
+        <label for="t3">3. 調整「建議覆蓋天數」查看補貨量變化</label>
+      </div>
+      <div class="task">
+        <input type="checkbox" id="t4">
+        <label for="t4">4. 成功查出品項的「庫存警示」狀態</label>
+      </div>
+    </div>
+
+    <a href="../index.html" class="btn-back">← 返回系統</a>
+  </div>
+
+  <script>
+    const checks = document.querySelectorAll('input[type="checkbox"]');
+    const progress = document.getElementById('progress');
+
+    checks.forEach(check => {
+      check.addEventListener('change', () => {
+        const label = check.nextElementSibling;
+        if (check.checked) label.classList.add('done');
+        else label.classList.remove('done');
+        
+        const doneCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+        const total = checks.length;
+        progress.style.width = (doneCount / total * 100) + '%';
+        
+        if (doneCount === total) {
+          setTimeout(() => alert('恭喜！你已完成所有新手操作測試！'), 300);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
