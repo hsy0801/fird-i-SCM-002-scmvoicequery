@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SCM-002 系統開發文件</title>
+  <style>
+    :root {
+      --navy: #0d2137;
+      --navy-mid: #1a365d;
+      --navy-light: #2c5282;
+      --bg: #f7f9fc;
+      --white: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --accent: #3182ce;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .topbar {
+      background: var(--navy);
+      color: var(--white);
+      padding: 1.25rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(13,33,55,0.15);
+    }
+    .topbar h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    .topbar p {
+      margin: 0.35rem 0 0;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      max-width: 1200px;
+      margin: 0 auto;
+      gap: 0;
+    }
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+      nav.toc { display: none; }
+    }
+    nav.toc {
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      padding: 1.25rem 1rem 2rem;
+      position: sticky;
+      top: 72px;
+      height: calc(100vh - 72px);
+      overflow-y: auto;
+      font-size: 0.8rem;
+    }
+    nav.toc a {
+      display: block;
+      color: var(--navy-mid);
+      text-decoration: none;
+      padding: 0.35rem 0.5rem;
+      border-radius: 4px;
+    }
+    nav.toc a:hover { background: var(--bg); color: var(--accent); }
+    nav.toc .toc-title {
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    main {
+      padding: 1.5rem 1.75rem 3rem;
+      min-width: 0;
+    }
+    section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 1.25rem;
+    }
+    section h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+      color: var(--navy);
+      border-bottom: 2px solid var(--navy-light);
+      padding-bottom: 0.4rem;
+    }
+    section h3 {
+      margin: 1rem 0 0.5rem;
+      font-size: 0.9rem;
+      color: var(--navy-mid);
+    }
+    p.lead { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.9rem; }
+    ul.compact { margin: 0.4rem 0; padding-left: 1.2rem; font-size: 0.9rem; }
+    ul.compact li { margin: 0.2rem 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin: 0.5rem 0;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.55rem;
+      text-align: left;
+    }
+    th {
+      background: var(--navy);
+      color: var(--white);
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: #f8fafc; }
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.78rem;
+    }
+    pre {
+      background: #edf2f7;
+      border-left: 3px solid var(--navy-light);
+      padding: 0.65rem 0.85rem;
+      overflow-x: auto;
+      margin: 0.5rem 0;
+      color: var(--navy-mid);
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .meta dt { font-size: 0.7rem; color: var(--muted); margin: 0; }
+    .meta dd { margin: 0.1rem 0 0; font-weight: 600; color: var(--navy); font-size: 0.88rem; }
+    .mermaid-wrap {
+      background: #fafbfc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 0.75rem 0;
+      overflow-x: auto;
+    }
+    .note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-left: 3px solid var(--accent);
+      padding-left: 0.65rem;
+      margin: 0.5rem 0;
+    }
+    .checklist { list-style: none; padding: 0; font-size: 0.85rem; }
+    .checklist li::before { content: "☐ "; color: var(--navy-light); }
+    .prio-p1 { color: #c53030; font-weight: 600; }
+    .prio-p2 { color: var(--navy-light); }
+    footer.doc-foot {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 1rem;
+    }
+    @media print {
+      .topbar, nav.toc { position: static; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>SCM-002 庫存語音查詢</h1>
+    <p>系統開發文件 · v1.0.2 · 2026-06-04 · PoC</p>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="章節導覽">
+      <div class="toc-title">目錄</div>
+      <a href="#s1">1 專案概述</a>
+      <a href="#s2">2 系統架構</a>
+      <a href="#s3">3 資料規格</a>
+      <a href="#s4">4 補貨邏輯</a>
+      <a href="#s5">5 查詢引擎</a>
+      <a href="#s6">6 介面模組</a>
+      <a href="#s7">7 核心函式</a>
+      <a href="#s8">8 環境建置</a>
+      <a href="#s9">9 團隊協作</a>
+      <a href="#s10">10 限制與風險</a>
+      <a href="#s11">11 Backlog</a>
+      <a href="#s12">12 版本紀錄</a>
+    </nav>
+
+    <main>
+      <section id="s-meta">
+        <dl class="meta">
+          <div><dt>專案代號</dt><dd>SCM-002</dd></div>
+          <div><dt>主要交付</dt><dd>scm-voice-query.html</dd></div>
+          <div><dt>資料源</dt><dd>CSV / Excel</dd></div>
+          <div><dt>狀態</dt><dd>可運行 PoC</dd></div>
+        </dl>
+      </section>
+
+      <section id="s1">
+        <h2>1. 專案概述</h2>
+        <p class="lead">供應鏈人員以語音或文字查詢庫存，依目前庫存、安全庫存、日均用量取得補貨建議。</p>
+        <h3>目標</h3>
+        <table>
+          <tr><th>項目</th><th>說明</th></tr>
+          <tr><td>資料匯入</td><td>CSV、xlsx/xls，表頭自動對應</td></tr>
+          <tr><td>補貨建議</td><td>建議補量、可用天數、風險標示</td></tr>
+          <tr><td>查詢</td><td>文字、快捷問題、語音 zh-TW</td></tr>
+          <tr><td>模糊篩選</td><td>品項、供應商可疊加意圖篩選</td></tr>
+          <tr><td>即時參數</td><td>覆蓋天數變更立即重算</td></tr>
+        </table>
+        <h3>非目標</h3>
+        <ul class="compact">
+          <li>無後端、無登入、不寫回 ERP／TIPTOP</li>
+          <li>Excel 僅第一個工作表</li>
+          <li>SheetJS 需 CDN（air-gap 需改本地）</li>
+        </ul>
+      </section>
+
+      <section id="s2">
+        <h2>2. 系統架構</h2>
+        <h3>2.1 技術部署</h3>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart LR
+  subgraph Client["瀏覽器（單頁 HTML）"]
+    UI[UI 層]
+    Loader[資料載入]
+    Engine[分析與查詢]
+    Voice[語音辨識]
+  end
+  DS[(CSV / Excel)]
+  CDN[SheetJS CDN]
+  DS --> Loader
+  CDN --> Loader
+  Loader --> Engine
+  UI --> Engine
+  Voice --> UI
+  Engine --> UI
+          </pre>
+        </div>
+        <h3>2.2 功能架構</h3>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart TB
+  USER((使用者)) --> F1[F1 資料來源]
+  USER --> F2[F2 補貨參數]
+  USER --> F3[F3 文字查詢]
+  USER --> F4[F4 語音]
+  USER --> F5[F5 快捷問題]
+  F1 --> M1[M1 載入正規化]
+  M1 --> M2[M2 rows 資料集]
+  F2 --> M6[M6 runQuery]
+  F3 --> M6
+  F5 --> M6
+  F4 --> F3
+  M6 --> M4[M4 意圖]
+  M6 --> M5[M5 模糊搜尋]
+  M6 --> M3[M3 補貨分析]
+  M2 --> M3
+  M3 --> M6
+  M6 --> F6[F6 結果展示]
+  F6 --> USER
+          </pre>
+        </div>
+        <table>
+          <tr><th>代號</th><th>名稱</th><th>程式要點</th></tr>
+          <tr><td>F1</td><td>資料來源</td><td>#dataFile、tryAutoLoad</td></tr>
+          <tr><td>F2</td><td>補貨參數</td><td>#coverDays 即時更新</td></tr>
+          <tr><td>F3～F5</td><td>查詢輸入</td><td>文字／語音／.chip</td></tr>
+          <tr><td>F6</td><td>結果展示</td><td>renderResults</td></tr>
+          <tr><td>M1～M6</td><td>核心模組</td><td>載入、分析、意圖、模糊、runQuery</td></tr>
+        </table>
+        <h3>查詢子流程</h3>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart LR
+  Q[查詢字串] --> I[parseIntent]
+  Q --> T[extractSearchTerms]
+  I --> R[runQuery]
+  T --> F[模糊篩選]
+  R --> A[analyzeRow]
+  A --> S1[意圖篩選]
+  S1 --> S2[模糊篩選]
+  F --> S2
+  S2 --> O[排序]
+  O --> V[renderResults]
+          </pre>
+        </div>
+        <h3>技術棧</h3>
+        <table>
+          <tr><th>層級</th><th>技術</th></tr>
+          <tr><td>前端</td><td>HTML5、CSS3、原生 JS</td></tr>
+          <tr><td>Excel</td><td>SheetJS CDN</td></tr>
+          <tr><td>語音</td><td>Web Speech API</td></tr>
+        </table>
+        <pre>D:\SCM-002\
+├── README.md
+├── scm-voice-query.html
+├── SCM-002.csv
+└── docs\  （本文件 .md / .html）</pre>
+      </section>
+
+      <section id="s3">
+        <h2>3. 資料規格</h2>
+        <p class="lead">一列 = 品項 × 供應商（可空）之庫存快照。</p>
+        <table>
+          <tr><th>欄位</th><th>必填</th><th>說明</th></tr>
+          <tr><td>品項</td><td>建議</td><td>空白 → (未命名)</td></tr>
+          <tr><td>目前庫存</td><td>是</td><td>數值</td></tr>
+          <tr><td>安全庫存</td><td>是</td><td>數值</td></tr>
+          <tr><td>日均用量</td><td>是</td><td>數值</td></tr>
+          <tr><td>供應商</td><td>否</td><td>可空白</td></tr>
+        </table>
+        <p class="note">表頭支援中英文別名（COL + pickCol）。缺三項數值欄位則載入失敗。</p>
+      </section>
+
+      <section id="s4">
+        <h2>4. 補貨與風險</h2>
+        <table>
+          <tr><th>參數</th><th>預設</th><th>範圍</th></tr>
+          <tr><td>建議覆蓋天數 #coverDays</td><td>7</td><td>1～90</td></tr>
+        </table>
+        <pre>target      = safety + daily × coverDays
+suggest     = max(0, ceil(target - stock))
+daysLeft    = daily > 0 ? stock / daily : …
+belowSafety = stock &lt; safety
+lowCover    = daily > 0 且 daysLeft &lt; coverDays
+needReorder = suggest > 0 且 (belowSafety 或 lowCover)</pre>
+        <table>
+          <tr><th>風險</th><th>條件</th></tr>
+          <tr><td>低於安全庫存</td><td>stock &lt; safety</td></tr>
+          <tr><td>可用天數不足</td><td>daysLeft &lt; coverDays</td></tr>
+          <tr><td>正常</td><td>其餘</td></tr>
+        </table>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart TD
+  A[載入 row] --> B[計算 suggest]
+  B --> C{stock &lt; safety?}
+  C -->|是| D[低於安全庫存]
+  C -->|否| E{天數不足?}
+  E -->|是| F[可用天數不足]
+  E -->|否| G[正常]
+          </pre>
+        </div>
+      </section>
+
+      <section id="s5">
+        <h2>5. 查詢引擎</h2>
+        <pre>runQuery → parseIntent → analyzeRow 全列 → 意圖篩選 → 模糊篩選 → 排序 → renderResults</pre>
+        <table>
+          <tr><th>mode</th><th>觸發</th><th>篩選</th></tr>
+          <tr><td>reorder</td><td>補多少／該補／空查詢</td><td>needReorder</td></tr>
+          <tr><td>below_safety</td><td>安全庫存</td><td>belowSafety</td></tr>
+          <tr><td>low_days</td><td>天數不足</td><td>lowCover</td></tr>
+          <tr><td>all</td><td>全部／列出</td><td>不額外過濾</td></tr>
+          <tr><td>search</td><td>僅關鍵字</td><td>模糊 only</td></tr>
+        </table>
+        <p class="note">模糊：每個 term 須命中品項或供應商（AND）。含子字串與子序列匹配。</p>
+        <table>
+          <tr><th>查詢範例</th><th>結果</th></tr>
+          <tr><td>哪些品項該補多少</td><td>需補貨列</td></tr>
+          <tr><td>益昌 布丁</td><td>模糊命中列</td></tr>
+          <tr><td>益昌 布丁該補多少</td><td>需補貨 + 模糊</td></tr>
+        </table>
+      </section>
+
+      <section id="s6">
+        <h2>6. 介面模組</h2>
+        <table>
+          <tr><th>區塊</th><th>ID</th><th>功能</th></tr>
+          <tr><td>資料來源</td><td>#dataFile</td><td>上傳、狀態</td></tr>
+          <tr><td>補貨參數</td><td>#coverDays</td><td>即時重算</td></tr>
+          <tr><td>查詢</td><td>#queryText, #btnMic</td><td>文字／語音</td></tr>
+          <tr><td>結果</td><td>#resultTable</td><td>統計 + 明細</td></tr>
+        </table>
+        <p class="note">語音：zh-TW；不支援時停用 #btnMic（建議 Chrome / Edge）。</p>
+      </section>
+
+      <section id="s7">
+        <h2>7. 核心函式</h2>
+        <table>
+          <tr><th>函式</th><th>職責</th></tr>
+          <tr><td>normalizeRecords / parseCSV</td><td>載入正規化</td></tr>
+          <tr><td>analyzeRow</td><td>補貨與風險</td></tr>
+          <tr><td>parseIntent / extractSearchTerms</td><td>意圖與關鍵字</td></tr>
+          <tr><td>fuzzyMatch / rowMatchesTerms</td><td>模糊比對</td></tr>
+          <tr><td>runQuery / renderResults</td><td>查詢與輸出（esc 防 XSS）</td></tr>
+        </table>
+        <p class="lead">狀態：<code>rows[]</code> 僅存於瀏覽器記憶體。</p>
+      </section>
+
+      <section id="s8">
+        <h2>8. 環境建置</h2>
+        <pre>cd D:\SCM-002
+python -m http.server 8080
+→ http://localhost:8080/scm-voice-query.html</pre>
+        <ul class="compact">
+          <li>無 HTTP：雙擊 HTML + 手動選檔</li>
+          <li>部署：靜態伺服器（IIS / Nginx）、內網共用資料夾</li>
+        </ul>
+      </section>
+
+      <section id="s9">
+        <h2>9. 團隊協作</h2>
+        <table>
+          <tr><th>變更</th><th>作法</th></tr>
+          <tr><td>補貨公式</td><td>analyzeRow + 更新 §4 文件</td></tr>
+          <tr><td>新意圖</td><td>parseIntent + runQuery</td></tr>
+          <tr><td>新欄位</td><td>COL、表格、renderResults</td></tr>
+        </table>
+        <h3>審查檢查</h3>
+        <ul class="checklist compact">
+          <li>COL 別名與文件 §3</li>
+          <li>esc() 輸出安全</li>
+          <li>STOP_WORDS 迴歸</li>
+          <li>覆蓋天數即時更新</li>
+        </ul>
+        <h3>手動測試</h3>
+        <table>
+          <tr><th>#</th><th>步驟</th><th>預期</th></tr>
+          <tr><td>T1</td><td>HTTP 開啟</td><td>自動載入 CSV</td></tr>
+          <tr><td>T3</td><td>益昌 布丁</td><td>模糊篩選正確</td></tr>
+          <tr><td>T4</td><td>天數 7→14</td><td>即時重算</td></tr>
+          <tr><td>T6</td><td>缺欄位檔</td><td>錯誤訊息</td></tr>
+        </table>
+      </section>
+
+      <section id="s10">
+        <h2>10. 限制與風險</h2>
+        <table>
+          <tr><th>項目</th><th>說明</th></tr>
+          <tr><td>多供應商同品項</td><td>列級，不自動彙總</td></tr>
+          <tr><td>大檔</td><td>全量記憶體，可能卡頓</td></tr>
+          <tr><td>補貨公式</td><td>樣板邏輯 ≠ ERP 正式政策</td></tr>
+          <tr><td>CDN</td><td>無網路則 Excel 無法解析</td></tr>
+        </table>
+      </section>
+
+      <section id="s11">
+        <h2>11. Backlog</h2>
+        <table>
+          <tr><th>優先</th><th>項目</th></tr>
+          <tr><td class="prio-p1">P1</td><td>TIPTOP 匯出欄位對齊、SheetJS 本地化</td></tr>
+          <tr><td class="prio-p2">P2</td><td>分組彙總、結果匯出 CSV</td></tr>
+          <tr><td>P3</td><td>localStorage、後端 API 同步</td></tr>
+          <tr><td>P4</td><td>拼音／同義詞模糊</td></tr>
+        </table>
+      </section>
+
+      <section id="s12">
+        <h2>12. 版本紀錄</h2>
+        <table>
+          <tr><th>版本</th><th>日期</th><th>說明</th></tr>
+          <tr><td>1.0.1</td><td>2026-06-04</td><td>Mermaid 功能架構圖</td></tr>
+          <tr><td>1.0.0</td><td>2026-06-04</td><td>初版 PoC 與開發文件</td></tr>
+          <tr><td>1.0.2</td><td>2026-06-04</td><td>HTML 報告版（本頁）</td></tr>
+        </table>
+        <p class="note">維護：邏輯變更請同步更新 .md、本 .html 與版本表。</p>
+      </section>
+    </main>
+  </div>
+
+  <footer class="doc-foot">SCM-002 系統開發文件 · Markdown 完整版見 系統開發文件.md</footer>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      themeVariables: {
+        primaryColor: '#e8eef4',
+        primaryTextColor: '#0d2137',
+        primaryBorderColor: '#1a365d',
+        lineColor: '#2c5282',
+        secondaryColor: '#f7f9fc',
+        tertiaryColor: '#ffffff',
+        fontFamily: 'Segoe UI, Microsoft JhengHei, sans-serif'
+      },
+      flowchart: { curve: 'basis', padding: 12 }
+    });
+  </script>
+</body>
+</html>
