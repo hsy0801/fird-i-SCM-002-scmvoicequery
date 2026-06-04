@@ -277,6 +277,24 @@
       font-size: 0.85rem;
     }
     .ai-chat-input button { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+    .ai-settings-panel {
+      padding: 1rem;
+      background: var(--surface2);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .ai-settings-panel label { font-size: 0.75rem; margin: 0; }
+    .ai-settings-panel input {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 0.4rem;
+      color: var(--text);
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 <body>
@@ -382,9 +400,22 @@
   </div>
   <div class="ai-chat-window" id="aiChatWindow">
     <div class="ai-chat-header">
-      <h3>Gemini AI 庫存分析</h3>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <h3>Gemini AI 庫存分析</h3>
+        <button type="button" id="toggleAiSettings" title="設定 API Key" style="background:none; padding:0; min-width:auto; font-size:0.9rem;">⚙️</button>
+      </div>
       <button type="button" id="closeChat" style="background:none; color:var(--muted); font-size:1.2rem; padding:0; min-width:auto;">&times;</button>
     </div>
+    
+    <div class="ai-settings-panel" id="aiSettingsPanel">
+      <label>Gemini API Key</label>
+      <div style="display: flex; gap: 5px;">
+        <input type="password" id="apiKeyInput" placeholder="貼上你的 API Key" style="flex:1;">
+        <button type="button" class="btn-primary" id="saveApiKey" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">儲存</button>
+      </div>
+      <p style="font-size: 0.65rem; color: var(--muted); margin: 0;">Key 將儲存在本地瀏覽器，不會上傳。</p>
+    </div>
+
     <div class="ai-chat-messages" id="aiChatMessages">
       <div class="msg ai">你好！我是你的庫存 AI 助理。你可以問我關於目前的補貨建議、風險分析，或是要求我總結目前的庫存狀況。</div>
     </div>
@@ -846,21 +877,41 @@
     const aiInput = document.getElementById('aiInput');
     const sendAiBtn = document.getElementById('sendAiBtn');
     const aiMessages = document.getElementById('aiChatMessages');
+    
+    const aiSettingsPanel = document.getElementById('aiSettingsPanel');
+    const toggleAiSettings = document.getElementById('toggleAiSettings');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const saveApiKey = document.getElementById('saveApiKey');
+
+    if (GEMINI_API_KEY) apiKeyInput.value = GEMINI_API_KEY;
 
     aiToggle.addEventListener('click', () => {
       aiWindow.style.display = aiWindow.style.display === 'flex' ? 'none' : 'flex';
     });
     closeChat.addEventListener('click', () => { aiWindow.style.display = 'none'; });
+    
+    toggleAiSettings.addEventListener('click', () => {
+      aiSettingsPanel.style.display = aiSettingsPanel.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    saveApiKey.addEventListener('click', () => {
+      const key = apiKeyInput.value.trim();
+      if (key) {
+        GEMINI_API_KEY = key;
+        localStorage.setItem('GEMINI_API_KEY', key);
+        alert('API Key 已儲存！');
+        aiSettingsPanel.style.display = 'none';
+      } else {
+        localStorage.removeItem('GEMINI_API_KEY');
+        GEMINI_API_KEY = "";
+        alert('API Key 已清除。');
+      }
+    });
 
     async function callGemini(prompt) {
       if (!GEMINI_API_KEY) {
-        const key = prompt("請輸入你的 Gemini API Key 以啟用 AI 功能：\n(此 Key 將儲存在你的瀏覽器中，不會上傳至伺服器)");
-        if (key) {
-          GEMINI_API_KEY = key;
-          localStorage.setItem('GEMINI_API_KEY', key);
-          return "API Key 已設定！請再試一次你的問題。";
-        }
-        return "尚未設定 API Key，無法使用 AI 分析功能。";
+        aiSettingsPanel.style.display = 'flex';
+        return "尚未設定 API Key。請在上方設定欄位中貼上你的 Gemini API Key 並儲存。";
       }
       
       const context = rows.length > 0 ? 
@@ -882,9 +933,7 @@
         return data.candidates[0].content.parts[0].text;
       } catch (err) {
         if (err.message.includes("API key not valid")) {
-          localStorage.removeItem('GEMINI_API_KEY');
-          GEMINI_API_KEY = "";
-          return "API Key 無效，已清除。請重新輸入。";
+          return "API Key 無效。請點擊上方 ⚙️ 按鈕重新檢查你的 Key。";
         }
         return "呼叫 Gemini API 時發生錯誤：" + err.message;
       }
