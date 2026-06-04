@@ -38,8 +38,32 @@
       grid-template-columns: 1fr;
     }
     @media (min-width: 900px) {
-      .grid { grid-template-columns: 320px 1fr; }
+      .grid { grid-template-columns: 320px 1fr; align-items: start; }
+      aside { position: sticky; top: 1rem; }
     }
+    
+    html { scroll-behavior: smooth; }
+    
+    /* Scroll to top button */
+    .btn-top {
+      position: fixed;
+      bottom: 6rem;
+      right: 2.5rem;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: var(--surface2);
+      color: var(--text);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 999;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: background 0.2s;
+    }
+    .btn-top:hover { background: var(--surface); }
     .card {
       background: var(--surface);
       border: 1px solid rgba(255,255,255,0.06);
@@ -393,6 +417,8 @@
       </main>
     </div>
   </div>
+
+  <div class="btn-top" id="btnTop" title="回到頂部">▲</div>
 
   <!-- AI Chat UI -->
   <div class="ai-chat-toggle" id="aiChatToggle" title="AI 助理分析">
@@ -868,6 +894,16 @@
         setDataStatus('請用「選擇檔案」載入 SCM-002.csv（直接雙擊 HTML 時無法自動讀檔）');
       }
     })();
+
+    // --- UI Enhancements ---
+    const btnTop = document.getElementById('btnTop');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) btnTop.style.display = 'flex';
+      else btnTop.style.display = 'none';
+    });
+    btnTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
     // --- AI Chat Logic ---
     let GEMINI_API_KEY = localStorage.getItem('GEMINI_API_KEY') || ""; 
