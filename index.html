@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SCM-002 庫存語音查詢</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface2: #243044;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d9cf5;
+      --accent-dim: #2a6fad;
+      --warn: #f5a623;
+      --danger: #ef5350;
+      --ok: #66bb6a;
+      --radius: 12px;
+      --font: "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: linear-gradient(160deg, #0a0e14 0%, #152238 50%, #0f1419 100%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+    header { margin-bottom: 1.75rem; }
+    h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.35rem; letter-spacing: 0.02em; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin: 0; }
+    .grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 900px) {
+      .grid { grid-template-columns: 320px 1fr; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.2rem;
+    }
+    .card h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0 0 0.85rem;
+      font-weight: 600;
+    }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
+    input[type="file"] {
+      width: 100%;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .field { margin-bottom: 0.9rem; }
+    .field input[type="number"] {
+      width: 100%;
+      padding: 0.5rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid var(--surface2);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .voice-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .query-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    #queryText {
+      flex: 1;
+      min-width: 180px;
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--surface2);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 1rem;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.6rem 1rem;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dim); }
+    .btn-mic {
+      background: var(--surface2);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-width: 7rem;
+      justify-content: center;
+    }
+    .btn-mic.listening { background: var(--danger); color: #fff; animation: pulse 1.2s infinite; }
+    @keyframes pulse { 50% { opacity: 0.85; } }
+    .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.25rem; }
+    .chip {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.55rem;
+      border-radius: 999px;
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--text); }
+    .status {
+      font-size: 0.8rem;
+      color: var(--muted);
+      min-height: 1.2em;
+    }
+    .status.error { color: var(--danger); }
+    .status.ok { color: var(--ok); }
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .stat {
+      flex: 1;
+      min-width: 120px;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+    }
+    .stat .n { font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+    .stat .l { font-size: 0.75rem; color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    th, td {
+      padding: 0.55rem 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    th { color: var(--muted); font-weight: 600; font-size: 0.75rem; }
+    tr:hover td { background: rgba(61,156,245,0.06); }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge-danger { background: rgba(239,83,80,0.2); color: #ff8a80; }
+    .badge-warn { background: rgba(245,166,35,0.2); color: #ffcc80; }
+    .badge-ok { background: rgba(102,187,106,0.2); color: #a5d6a7; }
+    .suggest { font-weight: 600; color: var(--warn); }
+    .empty {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--muted);
+    }
+    .logic-note {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 0.75rem;
+    }
+    .logic-note code { color: var(--accent); font-size: 0.72rem; }
+    .charts-panel {
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 720px) {
+      .charts-panel { grid-template-columns: 1.4fr 1fr; }
+    }
+    .chart-box {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 0.75rem 0.85rem 0.5rem;
+      min-height: 200px;
+    }
+    .chart-title {
+      margin: 0 0 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .chart-box canvas { max-height: 280px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>SCM-002 庫存語音查詢</h1>
+      <p class="subtitle">以 Excel / CSV 為資料源；品項、供應商支援模糊查詢（語音或文字）</p>
+    </header>
+
+    <div class="grid">
+      <aside>
+        <div class="card">
+          <h2>資料來源</h2>
+          <div class="field">
+            <label for="dataFile">載入 SCM-002.csv 或 .xlsx</label>
+            <input type="file" id="dataFile" accept=".csv,.xlsx,.xls" />
+          </div>
+          <p class="status" id="dataStatus">尚未載入資料（預設可讀取同目錄 SCM-002.csv）</p>
+        </div>
+
+        <div class="card" style="margin-top: 1rem;">
+          <h2>補貨參數（樣板）</h2>
+          <div class="field">
+            <label for="coverDays">建議覆蓋天數（日均用量 × 天數）</label>
+            <input type="number" id="coverDays" value="7" min="1" max="90" />
+          </div>
+          <p class="logic-note">
+            建議補量 ≈ <code>max(0, 安全庫存 + 日均用量×天數 − 目前庫存)</code><br>
+            風險：目前庫存 &lt; 安全庫存，或可用天數 &lt; 覆蓋天數
+          </p>
+        </div>
+      </aside>
+
+      <main>
+        <div class="card voice-box">
+          <h2>語音 / 文字查詢</h2>
+          <div class="query-row">
+            <input type="text" id="queryText" placeholder="例如：益昌 布丁該補多少？（品項、供應商可模糊查）" autocomplete="off" />
+            <button type="button" class="btn-mic" id="btnMic" title="語音輸入（需 Chrome / Edge）">🎤 語音</button>
+            <button type="button" class="btn-primary" id="btnSearch">查詢</button>
+          </div>
+          <div class="chips">
+            <span class="chip" data-q="哪些品項該補多少">哪些品項該補多少</span>
+            <span class="chip" data-q="益昌 布丁">益昌 布丁（模糊）</span>
+            <span class="chip" data-q="庫存低於安全庫存的品項">庫存低於安全庫存</span>
+            <span class="chip" data-q="可用天數不足七天的品項">可用天數不足</span>
+            <span class="chip" data-q="顯示全部品項建議">全部建議</span>
+          </div>
+          <p class="status" id="voiceStatus"></p>
+        </div>
+
+        <div class="card" style="margin-top: 1rem;">
+          <h2>查詢結果</h2>
+          <div class="summary" id="summary" hidden>
+            <div class="stat"><div class="n" id="statTotal">0</div><div class="l">資料筆數</div></div>
+            <div class="stat"><div class="n" id="statNeed">0</div><div class="l">建議補貨筆數</div></div>
+            <div class="stat"><div class="n" id="statQty">0</div><div class="l">建議補貨總量</div></div>
+          </div>
+          <div id="chartsPanel" class="charts-panel" hidden>
+            <div class="chart-box">
+              <h3 class="chart-title">建議補量 Top 10（本查詢）</h3>
+              <canvas id="chartSuggest" aria-label="建議補量長條圖"></canvas>
+            </div>
+            <div class="chart-box">
+              <h3 class="chart-title">風險分布（本查詢）</h3>
+              <canvas id="chartRisk" aria-label="風險分布長條圖"></canvas>
+            </div>
+          </div>
+          <div id="resultArea">
+            <div class="empty" id="emptyMsg">請先載入資料，再輸入或說出查詢問題。</div>
+            <table id="resultTable" hidden>
+              <thead>
+                <tr>
+                  <th>品項</th>
+                  <th>供應商</th>
+                  <th>目前庫存</th>
+                  <th>安全庫存</th>
+                  <th>日均用量</th>
+                  <th>可用天數</th>
+                  <th>風險</th>
+                  <th>建議補量</th>
+                </tr>
+              </thead>
+              <tbody id="resultBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 樣板：可選 xlsx 解析；CSV 內建解析 -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const CHART_TOP_N = 10;
+    const COL = {
+      item: ['品項', '品名', '產品', 'item', 'product'],
+      stock: ['目前庫存', '庫存', '現有庫存', 'stock', 'on_hand'],
+      safety: ['安全庫存', '安全存量', 'safety', 'safety_stock'],
+      daily: ['日均用量', '日用量', '平均日用量', 'daily_usage', 'avg_daily'],
+      vendor: ['供應商', '廠商', 'vendor', 'supplier']
+    };
+
+    let rows = [];
+    let chartSuggest = null;
+    let chartRisk = null;
+
+    const CHART_COLORS = {
+      suggest: 'rgba(61, 156, 245, 0.75)',
+      suggestBorder: '#3d9cf5',
+      danger: 'rgba(239, 83, 80, 0.8)',
+      warn: 'rgba(245, 166, 35, 0.8)',
+      ok: 'rgba(102, 187, 106, 0.65)'
+    };
+
+    function chartAxisTheme() {
+      return {
+        ticks: { color: '#8b9cb3', font: { size: 11 } },
+        grid: { color: 'rgba(255,255,255,0.06)' }
+      };
+    }
+
+    function chartLabel(row) {
+      const suffix = row.vendor ? ` · ${row.vendor}` : '';
+      const s = row.item + suffix;
+      return s.length > 20 ? s.slice(0, 19) + '…' : s;
+    }
+
+    function destroyCharts() {
+      if (chartSuggest) { chartSuggest.destroy(); chartSuggest = null; }
+      if (chartRisk) { chartRisk.destroy(); chartRisk = null; }
+    }
+
+    function updateCharts(list) {
+      const panel = document.getElementById('chartsPanel');
+      if (typeof Chart === 'undefined') {
+        panel.hidden = true;
+        destroyCharts();
+        return;
+      }
+      destroyCharts();
+      if (!list.length) {
+        panel.hidden = true;
+        return;
+      }
+      panel.hidden = false;
+
+      const top = list
+        .filter(a => a.suggest > 0)
+        .slice(0, CHART_TOP_N)
+        .reverse();
+
+      const ctxSuggest = document.getElementById('chartSuggest');
+      if (top.length) {
+        chartSuggest = new Chart(ctxSuggest, {
+          type: 'bar',
+          data: {
+            labels: top.map(chartLabel),
+            datasets: [{
+              label: '建議補量',
+              data: top.map(a => a.suggest),
+              backgroundColor: CHART_COLORS.suggest,
+              borderColor: CHART_COLORS.suggestBorder,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  afterLabel(ctx) {
+                    const row = top[ctx.dataIndex];
+                    return `風險：${row.risk}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { beginAtZero: true, ...chartAxisTheme() },
+              y: { ...chartAxisTheme(), grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      const riskCounts = {
+        '低於安全庫存': list.filter(a => a.belowSafety).length,
+        '可用天數不足': list.filter(a => !a.belowSafety && a.lowCover).length,
+        '正常': list.filter(a => !a.belowSafety && !a.lowCover).length
+      };
+      const riskLabels = ['低於安全庫存', '可用天數不足', '正常'];
+      const riskData = riskLabels.map(k => riskCounts[k]);
+      const riskColors = [CHART_COLORS.danger, CHART_COLORS.warn, CHART_COLORS.ok];
+
+      chartRisk = new Chart(document.getElementById('chartRisk'), {
+        type: 'bar',
+        data: {
+          labels: riskLabels,
+          datasets: [{
+            label: '筆數',
+            data: riskData,
+            backgroundColor: riskColors,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ...chartAxisTheme(), grid: { display: false } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, color: '#8b9cb3' }, grid: chartAxisTheme().grid }
+          }
+        }
+      });
+    }
+
+    function pickCol(headers, aliases) {
+      const h = headers.map(x => String(x || '').trim());
+      for (const a of aliases) {
+        const i = h.findIndex(x => x === a || x.toLowerCase() === a.toLowerCase());
+        if (i >= 0) return i;
+      }
+      return -1;
+    }
+
+    function normalizeRecords(rawRows) {
+      if (!rawRows.length) return [];
+      const headers = rawRows[0].map(c => String(c ?? '').trim());
+      const idx = {
+        item: pickCol(headers, COL.item),
+        stock: pickCol(headers, COL.stock),
+        safety: pickCol(headers, COL.safety),
+        daily: pickCol(headers, COL.daily),
+        vendor: pickCol(headers, COL.vendor)
+      };
+      if (idx.stock < 0 || idx.safety < 0 || idx.daily < 0) {
+        throw new Error('找不到必要欄位：目前庫存、安全庫存、日均用量');
+      }
+      const out = [];
+      for (let r = 1; r < rawRows.length; r++) {
+        const line = rawRows[r];
+        if (!line || !line.length) continue;
+        const item = idx.item >= 0 ? String(line[idx.item] ?? '').trim() : '(未命名)';
+        const stock = num(line[idx.stock]);
+        const safety = num(line[idx.safety]);
+        const daily = num(line[idx.daily]);
+        const vendor = idx.vendor >= 0 ? String(line[idx.vendor] ?? '').trim() : '';
+        if (stock === null && safety === null && daily === null) continue;
+        out.push({ item: item || '(未命名)', stock, safety, daily, vendor, _row: r + 1 });
+      }
+      return out;
+    }
+
+    function num(v) {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Number(String(v).replace(/,/g, ''));
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function parseCSV(text) {
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim());
+      return lines.map(line => {
+        const cells = [];
+        let cur = '', inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { inQ = !inQ; continue; }
+          if (ch === ',' && !inQ) { cells.push(cur); cur = ''; continue; }
+          cur += ch;
+        }
+        cells.push(cur);
+        return cells.map(c => c.trim());
+      });
+    }
+
+    function setDataStatus(msg, type) {
+      const el = document.getElementById('dataStatus');
+      el.textContent = msg;
+      el.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function loadRows(records) {
+      rows = records;
+      setDataStatus(`已載入 ${rows.length} 筆`, 'ok');
+    }
+
+    function analyzeRow(row, coverDays) {
+      const stock = row.stock ?? 0;
+      const safety = row.safety ?? 0;
+      const daily = row.daily ?? 0;
+      const target = safety + daily * coverDays;
+      const suggest = Math.max(0, Math.ceil(target - stock));
+      const daysLeft = daily > 0 ? stock / daily : (stock > 0 ? 999 : 0);
+      const belowSafety = stock < safety;
+      const lowCover = daily > 0 && daysLeft < coverDays;
+      const needReorder = suggest > 0 && (belowSafety || lowCover);
+      let risk = '正常', riskClass = 'badge-ok';
+      if (belowSafety) { risk = '低於安全庫存'; riskClass = 'badge-danger'; }
+      else if (lowCover) { risk = '可用天數不足'; riskClass = 'badge-warn'; }
+      return { ...row, daysLeft, suggest, needReorder, risk, riskClass, belowSafety, lowCover };
+    }
+
+    const STOP_WORDS = [
+      '哪些', '品項', '該補', '多少', '庫存', '低於', '安全', '存量', '可用',
+      '天數', '不足', '顯示', '全部', '所有', '列出', '建議', '補貨', '查詢',
+      '的', '嗎', '請', '有', '什麼', '幾', '天', '需要', '幫', '我', '看'
+    ];
+
+    function normalizeForMatch(s) {
+      return String(s ?? '').toLowerCase().replace(/\s/g, '');
+    }
+
+    /** 模糊比對：子字串包含，或字元依序出現（如「益」→「益昌」） */
+    function fuzzyMatch(haystack, needle) {
+      if (!needle) return true;
+      const h = normalizeForMatch(haystack);
+      const n = normalizeForMatch(needle);
+      if (!n) return true;
+      if (!h) return false;
+      if (h.includes(n)) return true;
+      let i = 0;
+      for (const c of h) {
+        if (c === n[i]) i++;
+        if (i === n.length) return true;
+      }
+      return false;
+    }
+
+    function extractSearchTerms(query) {
+      let q = String(query || '').trim();
+      for (const w of STOP_WORDS) {
+        q = q.replace(new RegExp(w, 'g'), ' ');
+      }
+      const terms = (q.match(/[\u4e00-\u9fff]+|[a-zA-Z0-9]+/g) || [])
+        .map(t => t.trim())
+        .filter(t => t.length >= 1);
+      return [...new Set(terms)];
+    }
+
+    /** 每個關鍵字至少命中品項或供應商其一（皆可模糊） */
+    function rowMatchesTerms(row, terms) {
+      if (!terms.length) return true;
+      return terms.every(term =>
+        fuzzyMatch(row.item, term) || fuzzyMatch(row.vendor, term)
+      );
+    }
+
+    function parseIntent(query) {
+      const q = (query || '').trim();
+      const terms = extractSearchTerms(q);
+      if (!q) return { mode: 'reorder', terms };
+      if (/全部|所有|列出/.test(q)) return { mode: 'all', terms };
+      if (/安全庫存|安全存量/.test(q)) return { mode: 'below_safety', terms };
+      if (/可用天數|天數不足|幾天/.test(q)) return { mode: 'low_days', terms };
+      if (/補多少|該補|補貨|建議/.test(q)) return { mode: 'reorder', terms };
+      if (terms.length) return { mode: 'search', terms };
+      return { mode: 'reorder', terms };
+    }
+
+    function runQuery(query) {
+      if (!rows.length) {
+        document.getElementById('voiceStatus').textContent = '請先載入 CSV / Excel';
+        document.getElementById('voiceStatus').className = 'status error';
+        return;
+      }
+      const coverDays = Math.max(1, Number(document.getElementById('coverDays').value) || 7);
+      const intent = parseIntent(query);
+      const terms = intent.terms || [];
+      let analyzed = rows.map(r => analyzeRow(r, coverDays));
+
+      if (intent.mode === 'below_safety') analyzed = analyzed.filter(a => a.belowSafety);
+      else if (intent.mode === 'low_days') analyzed = analyzed.filter(a => a.lowCover);
+      else if (intent.mode === 'reorder') analyzed = analyzed.filter(a => a.needReorder);
+      else if (intent.mode === 'search') { /* 僅關鍵字篩選，不限制補貨 */ }
+
+      if (terms.length) analyzed = analyzed.filter(a => rowMatchesTerms(a, terms));
+
+      analyzed.sort((a, b) => b.suggest - a.suggest);
+
+      renderResults(analyzed, query);
+      const fuzzyHint = terms.length ? `（模糊：${terms.join('、')}）` : '';
+      document.getElementById('voiceStatus').textContent = `已依「${query || '預設補貨建議'}」篩選${fuzzyHint}`;
+      document.getElementById('voiceStatus').className = 'status ok';
+    }
+
+    function renderResults(list, query) {
+      const empty = document.getElementById('emptyMsg');
+      const table = document.getElementById('resultTable');
+      const body = document.getElementById('resultBody');
+      const summary = document.getElementById('summary');
+
+      if (!list.length) {
+        empty.hidden = false;
+        empty.textContent = query ? '沒有符合條件的品項。' : '沒有資料。';
+        table.hidden = true;
+        summary.hidden = true;
+        destroyCharts();
+        document.getElementById('chartsPanel').hidden = true;
+        return;
+      }
+
+      empty.hidden = true;
+      table.hidden = false;
+      summary.hidden = false;
+
+      document.getElementById('statTotal').textContent = rows.length;
+      document.getElementById('statNeed').textContent = list.length;
+      document.getElementById('statQty').textContent = list.reduce((s, x) => s + x.suggest, 0);
+
+      updateCharts(list);
+
+      body.innerHTML = list.map(a => `
+        <tr>
+          <td>${esc(a.item)}</td>
+          <td>${esc(a.vendor || '—')}</td>
+          <td>${fmt(a.stock)}</td>
+          <td>${fmt(a.safety)}</td>
+          <td>${fmt(a.daily)}</td>
+          <td>${a.daily > 0 ? a.daysLeft.toFixed(1) : '—'}</td>
+          <td><span class="badge ${a.riskClass}">${a.risk}</span></td>
+          <td class="suggest">${a.suggest > 0 ? a.suggest : '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+    function fmt(n) {
+      if (n === null || n === undefined) return '—';
+      return String(n);
+    }
+
+    document.getElementById('dataFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'csv') {
+          const text = await file.text();
+          loadRows(normalizeRecords(parseCSV(text)));
+        } else {
+          const buf = await file.arrayBuffer();
+          const wb = XLSX.read(buf, { type: 'array' });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          loadRows(normalizeRecords(raw));
+        }
+        runQuery(document.getElementById('queryText').value);
+      } catch (err) {
+        setDataStatus(err.message || '載入失敗', 'error');
+      }
+    });
+
+    document.getElementById('btnSearch').addEventListener('click', () => {
+      runQuery(document.getElementById('queryText').value);
+    });
+    document.getElementById('queryText').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') runQuery(e.target.value);
+    });
+    document.querySelectorAll('.chip').forEach(el => {
+      el.addEventListener('click', () => {
+        const q = el.dataset.q;
+        document.getElementById('queryText').value = q;
+        runQuery(q);
+      });
+    });
+
+    function refreshOnCoverDaysChange() {
+      if (!rows.length) return;
+      runQuery(document.getElementById('queryText').value);
+    }
+    const coverDaysEl = document.getElementById('coverDays');
+    coverDaysEl.addEventListener('input', refreshOnCoverDaysChange);
+    coverDaysEl.addEventListener('change', refreshOnCoverDaysChange);
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const btnMic = document.getElementById('btnMic');
+    const voiceStatus = document.getElementById('voiceStatus');
+
+    if (!SpeechRecognition) {
+      btnMic.disabled = true;
+      btnMic.title = '此瀏覽器不支援語音辨識，請改用 Chrome 或 Edge';
+    } else {
+      const rec = new SpeechRecognition();
+      rec.lang = 'zh-TW';
+      rec.interimResults = false;
+      rec.continuous = false;
+
+      btnMic.addEventListener('click', () => {
+        try { rec.start(); } catch (_) { rec.stop(); }
+      });
+      rec.onstart = () => {
+        btnMic.classList.add('listening');
+        btnMic.textContent = '🔴 聆聽中';
+        voiceStatus.textContent = '請說出查詢問題…';
+        voiceStatus.className = 'status';
+      };
+      rec.onend = () => {
+        btnMic.classList.remove('listening');
+        btnMic.textContent = '🎤 語音';
+      };
+      rec.onresult = (ev) => {
+        const text = ev.results[0][0].transcript;
+        document.getElementById('queryText').value = text;
+        runQuery(text);
+      };
+      rec.onerror = (ev) => {
+        voiceStatus.textContent = '語音錯誤：' + (ev.error || 'unknown');
+        voiceStatus.className = 'status error';
+      };
+    }
+
+    // 樣板：若透過本機伺服器開啟，可自動載入同目錄 CSV
+    (async function tryAutoLoad() {
+      try {
+        const res = await fetch('SCM-002.csv');
+        if (!res.ok) return;
+        const text = await res.text();
+        loadRows(normalizeRecords(parseCSV(text)));
+        document.getElementById('queryText').value = '哪些品項該補多少';
+        runQuery('哪些品項該補多少');
+      } catch (_) {
+        setDataStatus('請用「選擇檔案」載入 SCM-002.csv（直接雙擊 HTML 時無法自動讀檔）');
+      }
+    })();
+  </script>
+</body>
+</html>
