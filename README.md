@@ -9,8 +9,6 @@ cd D:\SCM-002
 python -m http.server 8080
 ```
 
-瀏覽器開啟：<http://localhost:8080/scm-voice-query.html>
-
 > 直接雙擊 HTML 時，請用畫面「選擇檔案」手動載入 `SCM-002.csv`（瀏覽器安全限制無法自動讀取本機檔案）。
 
 ## 專案檔案
